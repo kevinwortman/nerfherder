@@ -9,11 +9,6 @@ def ctrl_c_handler(signum, frame):
     logging.info('received SIGINT, exiting')
     sys.exit(0)
 
-def repo_exists_locally(dest_dir, repo):
-    subdir = repo.name
-    expected_path = os.path.join(dest_dir, subdir)
-    return os.path.isdir(expected_path)
-
 def main():
     parser = argparse.ArgumentParser(description='clone all repositories owned by one organization')
     parser.add_argument('login', help='GitHub user login string, e.g. kevinwortman')
