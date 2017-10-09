@@ -1,0 +1,74 @@
+#! /usr/bin/env python3
+# -*-Python-*-
+
+import argparse, getpass, logging, os.path, shutil, signal, subprocess, sys
+
+import github
+
+def ctrl_c_handler(signum, frame):
+    logging.info('received SIGINT, exiting')
+    sys.exit(0)
+
+def repo_exists_locally(dest_dir, repo):
+    subdir = repo.name
+    expected_path = os.path.join(dest_dir, subdir)
+    return os.path.isdir(expected_path)
+
+def main():
+    parser = argparse.ArgumentParser(description='clone all repositories owned by one organization')
+    parser.add_argument('login', help='GitHub user login string, e.g. kevinwortman')
+    parser.add_argument('org', help='GitHub organization name, e.g. CSUF-CPSC-335-FA18')
+    parser.add_argument('--dest', required=False, type=str, help='destination directory; defaults to .')
+    parser.add_argument('--replace', action='store_true', help='replace local copies of repos; by default local copies are skipped')
+    args = parser.parse_args()
+
+    passwd = getpass.getpass('GitHub password:')
+    the_github = github.Github(login_or_token=args.login, password=passwd)
+    passwd = None
+
+    logging.info('fetching organization ' + args.org)
+    org = the_github.get_organization(args.org)
+
+    logging.info('retrieving list of repositories...')
+    unsorted_repos = list(org.get_repos())
+    sorted_repos = sorted(unsorted_repos,
+                          key=lambda repo: repo.name)
+    logging.info('found ' + str(len(sorted_repos)) + ' repositories in total')
+
+    dest_dir = '.'
+    if args.dest:
+        dest_dir = args.dest
+        if not os.path.isdir(dest_dir):
+            logging.error('specified destination directory does not exist: "' +
+                          dest_dir + '"')
+            sys.exit(1)
+
+    new = skipped = replaced = 0
+            
+    for repo in sorted_repos:
+        dest_path = os.path.join(dest_dir, repo.name)
+        
+        if not os.path.isdir(dest_path):
+            new += 1
+        else:
+            if not args.replace:
+                logging.info('skipping repository that exists locally: ' + repo.name)
+                skipped += 1
+                continue
+            else:
+                logging.info('replacing ' + repo.name)
+                shutil.rmtree(dest_path)
+                replaced += 1
+
+        logging.info('cloning ' + repo.name)
+        subprocess.run(['git', 'clone', repo.clone_url])
+
+    logging.info('cloned ' + str(new) + ' new repositories, ' +
+                 'replaced ' + str(replaced) + ' repositories, and ' +
+                 'skipped ' + str(skipped) + ' repositories that already exist locally')
+                 
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    signal.signal(signal.SIGINT, ctrl_c_handler)
+    main()
