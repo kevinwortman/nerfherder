@@ -1,0 +1,50 @@
+#! /usr/bin/env python3
+# -*-Python-*-
+
+import argparse, csv, logging, os, sys
+
+DESCRIPTION = """
+Scan a directory for cloned repositores, and create a CSV file
+suitable for the Moodle Import Groups feature that would create one
+group per repo, using the repo's name as the group name.
+"""
+
+def main():
+    logging.getLogger().setLevel(logging.INFO)
+    
+    parser = argparse.ArgumentParser(description=DESCRIPTION,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    
+    parser.add_argument('--dir', required=False, type=str, default='.',
+                        help='parent directory of repositories; defaults to .')
+    parser.add_argument('--output', required=False, type=str, default='groups.csv',
+                        help='CSV path to create, defaults to groups.csv')
+    args = parser.parse_args()
+
+    parent_dir = args.dir        
+    if not os.path.isdir(parent_dir):
+        logging.error('specified parent directory does not exist: "' +
+                      parent_dir + '"')
+        sys.exit(1)
+    
+    group_names = []
+    for subdir in os.listdir(parent_dir):
+
+        if subdir[0] == '.':
+            continue
+        
+        repo_name = subdir
+        repo_path = os.path.join(parent_dir, subdir)
+        dot_git_path = os.path.join(repo_path, '.git')
+        if (os.path.isdir(repo_path) and
+            os.path.isdir(dot_git_path)):
+            group_names.append(repo_name)
+
+    group_names.sort()
+
+    with open(args.output, 'w', newline='') as f:
+        csv.writer(f).writerows([['groupname']] +
+                                [ [g] for g in group_names ])
+
+if __name__ == '__main__':
+    main()
