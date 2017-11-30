@@ -1,0 +1,69 @@
+#! /usr/bin/env python3
+# -*-Python-*-
+
+import argparse, logging, os, sys
+
+DESCRIPTION = """
+For each cloned repository, print its name and the emails of all group
+members listed in README.md.
+
+Each line of output is formatted as
+<VERDICT> <REPO NAME> [EMAIL ADDRESS ...]
+where VERDICT is one of:
+?   the directory does not contain README.md, or is not even a directory
+Z   zero: README.md does not contain email addresses
+S   starter code: the emails are adalovelace@csu.fullerton.edu and
+        charlesbab@csu.fullerton.edu
++   OK: there is at least one email, not the starter emails
+"""
+
+def main():
+    logging.getLogger().setLevel(logging.INFO)
+    
+    parser = argparse.ArgumentParser(description=DESCRIPTION,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    
+    parser.add_argument('--dir', required=False, type=str, default='.', help='parent directory of repositories; defaults to .')
+    args = parser.parse_args()
+
+    parent_dir = args.dir        
+    if not os.path.isdir(parent_dir):
+        logging.error('specified parent directory does not exist: "' +
+                      parent_dir + '"')
+        sys.exit(1)
+    
+    for subdir in sorted(os.listdir(parent_dir)):
+
+        if subdir[0] == '.':
+            continue
+        
+        repo_name = subdir
+        repo_path = os.path.join(parent_dir, subdir)
+        readme_path = os.path.join(repo_path, 'README.md')
+        if ((not os.path.isdir(repo_path)) or
+            (not os.path.isfile(readme_path))):
+            # does not contain README.md
+            print('? ' + repo_name)
+        else:
+            emails = []
+            with open(readme_path) as f:
+                for token in f.read().split():
+                    if token.count('@') == 1:
+                       emails.append(token)
+
+            emails.sort()
+                       
+            if len(emails) == 0:
+                verdict = 'Z'
+            if emails == ['adalovelace@csu.fullerton.edu',
+                          'charlesbab@csu.fullerton.edu']:
+                verdict = 'S'
+            else:
+                verdict = '+'
+
+            print(verdict + ' ' +
+                  repo_name + ' ' +
+                  ' '.join(emails))
+
+if __name__ == '__main__':
+    main()
