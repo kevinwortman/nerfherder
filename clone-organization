@@ -14,6 +14,7 @@ def main():
     parser.add_argument('login', help='GitHub user login string, e.g. kevinwortman')
     parser.add_argument('org', help='GitHub organization name, e.g. CSUF-CPSC-335-FA18')
     parser.add_argument('--dest', required=False, type=str, help='destination directory; defaults to .')
+    parser.add_argument('--prefix', required=False, type=str, help='prefix of the name of the repositories to clone.')
     parser.add_argument('--replace', action='store_true', help='replace local copies of repos; by default local copies are skipped')
     args = parser.parse_args()
 
@@ -28,6 +29,10 @@ def main():
     unsorted_repos = list(org.get_repos())
     sorted_repos = sorted(unsorted_repos,
                           key=lambda repo: repo.name)
+    if args.prefix:
+        sorted_repos = list(filter(
+                lambda repo: repo.name.startswith(args.prefix),
+                sorted_repos))
     logging.info('found ' + str(len(sorted_repos)) + ' repositories in total')
 
     dest_dir = '.'
@@ -39,10 +44,10 @@ def main():
             sys.exit(1)
 
     new = skipped = replaced = 0
-            
+
     for repo in sorted_repos:
         dest_path = os.path.join(dest_dir, repo.name)
-        
+
         if not os.path.isdir(dest_path):
             new += 1
         else:
@@ -61,7 +66,7 @@ def main():
     logging.info('cloned ' + str(new) + ' new repositories, ' +
                  'replaced ' + str(replaced) + ' repositories, and ' +
                  'skipped ' + str(skipped) + ' repositories that already exist locally')
-                 
+
 if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
