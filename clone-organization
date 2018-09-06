@@ -37,12 +37,14 @@ def main():
             logging.error('specified destination directory does not exist: "' +
                           dest_dir + '"')
             sys.exit(1)
+        else:
+            os.chdir(args.dest)
 
     new = skipped = replaced = 0
-            
+
     for repo in sorted_repos:
         dest_path = os.path.join(dest_dir, repo.name)
-        
+
         if not os.path.isdir(dest_path):
             new += 1
         else:
@@ -61,7 +63,7 @@ def main():
     logging.info('cloned ' + str(new) + ' new repositories, ' +
                  'replaced ' + str(replaced) + ' repositories, and ' +
                  'skipped ' + str(skipped) + ' repositories that already exist locally')
-                 
+
 if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
