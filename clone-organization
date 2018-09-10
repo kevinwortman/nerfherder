@@ -42,6 +42,8 @@ def main():
             logging.error('specified destination directory does not exist: "' +
                           dest_dir + '"')
             sys.exit(1)
+        else:
+            os.chdir(args.dest)
 
     new = skipped = replaced = 0
 
