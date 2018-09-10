@@ -20,6 +20,9 @@ def main():
 
     passwd = getpass.getpass('GitHub password:')
     the_github = github.Github(login_or_token=args.login, password=passwd)
+    # For security reasons we should purge the password string from memory.
+    # In Python the best we can do is break our reference and hope that the
+    # string object gets garbage collected promptly.
     passwd = None
 
     logging.info('fetching organization ' + args.org)
