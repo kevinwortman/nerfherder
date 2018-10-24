@@ -1,0 +1,54 @@
+#! /usr/bin/env python3
+# -*-Python-*-
+
+import argparse, getpass, logging, os.path, shutil, signal, subprocess, sys
+
+import github
+
+def ctrl_c_handler(signum, frame):
+    logging.info('received SIGINT, exiting')
+    sys.exit(0)
+
+def main():
+    parser = argparse.ArgumentParser(description='remove the collaborator specified by the postfix of the name of the repository')
+    parser.add_argument('login', help='GitHub user login string, e.g. kevinwortman')
+    parser.add_argument('org', help='GitHub organization name, e.g. CSUF-CPSC-335-FA18')
+    parser.add_argument('--prefix', required=True, type=str, help='prefix of the name of the repositories to remove the collaborator from the name of the repository.')
+    parser.add_argument('--user', required=False, type=str, help='specific user to remove as collaborator from their repository')
+    args = parser.parse_args()
+
+    passwd = getpass.getpass('GitHub password:')
+    the_github = github.Github(login_or_token=args.login, password=passwd)
+    # For security reasons we should purge the password string from memory.
+    # In Python the best we can do is break our reference and hope that the
+    # string object gets garbage collected promptly.
+    passwd = None
+
+    logging.info('fetching organization ' + args.org)
+    org = the_github.get_organization(args.org)
+
+    logging.info('retrieving list of repositories...')
+    repos = list(org.get_repos())
+    filtered_repos = list(filter(
+            lambda repo: repo.name.startswith(args.prefix),
+            repos))
+
+    if args.user is not None:
+        filtered_repos = list(filter(
+                lambda repo: args.user in repo.name,
+                filtered_repos))
+
+    for repo in filtered_repos:
+        username = repo.name[repo.name.rfind('-')+1:]
+        collaborators = [c.login for c in list(repo.get_collaborators())]
+        if username in collaborators:
+            repo.remove_from_collaborators(username)
+            logging.info('removed %s@ from %s/%s' % (username, args.org, repo.name))
+        else:
+            logging.info('%s is not a collaborator of %s/%s' % (username, args.org, repo.name))
+
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    signal.signal(signal.SIGINT, ctrl_c_handler)
+    main()
