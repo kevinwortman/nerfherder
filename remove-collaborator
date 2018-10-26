@@ -3,7 +3,10 @@
 
 import argparse, getpass, logging, os.path, shutil, signal, subprocess, sys
 
+import keyring
 import github
+
+_KEYRING_SYSTEM_NAME = 'github'
 
 def ctrl_c_handler(signum, frame):
     logging.info('received SIGINT, exiting')
@@ -17,7 +20,12 @@ def main():
     parser.add_argument('--user', required=False, type=str, help='specific user to remove as collaborator from their repository')
     args = parser.parse_args()
 
-    passwd = getpass.getpass('GitHub password:')
+    passwd = keyring.get_password(_KEYRING_SYSTEM_NAME, args.login)
+    if passwd is None:
+        passwd = getpass.getpass('GitHub password:')
+        store_passwd = input('Store your password in the system? [Y/n]: ')
+        if (store_passwd == 'Y'):
+            keyring.set_password(_KEYRING_SYSTEM_NAME, args.login, passwd)
     the_github = github.Github(login_or_token=args.login, password=passwd)
     # For security reasons we should purge the password string from memory.
     # In Python the best we can do is break our reference and hope that the
