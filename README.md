@@ -21,7 +21,7 @@ environments, use
 
 The following command should prepare your Python environment:
 
-`[~]$ pip3 install PyGithub TravisPy`
+`[~]$ pip3 install PyGithub TravisPy keyring`
 
 ## Cloning Student Repositories
 
