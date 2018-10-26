@@ -37,6 +37,8 @@ def main():
         filtered_repos = list(filter(
                 lambda repo: args.user in repo.name,
                 filtered_repos))
+        if not filtered_repos:
+            logging.warning('User %s not found' % args.user)
 
     for repo in filtered_repos:
         username = repo.name[repo.name.rfind('-')+1:]
