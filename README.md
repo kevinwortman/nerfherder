@@ -43,4 +43,5 @@ to change after they have already been graded. If instead you want to download
 **every** repository, including ones that are already here, use the `--replace`
 switch.
 
+
 `[~/grading]$ ~/nerfherder/clone-organization kevinwortman CSUF-CPSC-335-FA18 --replace`
