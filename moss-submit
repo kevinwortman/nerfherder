@@ -13,35 +13,34 @@ def fail(message):
 
 def main():
     parser = argparse.ArgumentParser(description='submit repositories to MOSS for plagiarism detection')
-    parser.add_argument('file', help='name of the one file within a repo that is checked for plagiarism')
-    parser.add_argument('skeleton', help='path to the repo that contains the skeleton/starter code')
-    parser.add_argument('--dir', type=str, default='.', help='directory holding the repos, defaults to .')
-    parser.add_argument('--language', type=str, default='cc', help='MOSS-recognized programming language, defaults to cc')
+    parser.add_argument('--filename', required=True, help='name of the single source file within a repo that is checked for plagiarism')
+    parser.add_argument('--skeleton', required=True, help='path to a repo that contains the skeleton/starter code')
+    parser.add_argument('--dir', type=str, default='.', help='directory holding the repos, as downloaded by GitHub Classroom Assistant, defaults to .')
+    parser.add_argument('--language', type=str, default='cc', help='programming language passed to MOSS, defaults to cc')
     parser.add_argument('--moss', type=str, default='./moss', help='path to the MOSS Perl script, defaults to ./moss')
 
     args = parser.parse_args()
 
-    file = args.file
+    filename = args.filename
     skeleton = args.skeleton
     dir = args.dir
     language = args.language
-    moss = args.moss
+    moss_script_path = args.moss
 
-    skeleton_file_path = os.path.join(skeleton, file)
+    skeleton_file_path = os.path.join(skeleton, filename)
 
     if len(language) == 0:
-        # should check this more carefully
         fail('not a valid MOSS language: "' + language + '"')
     if not os.path.isdir(os.path.join(dir, skeleton)):
         fail('no such skeleton directory: "' + skeleton + '"')
     if not os.path.isfile(skeleton_file_path):
-        fail('cannot find source file ' + file + ' in skeleton repo ' + skeleton)
+        fail('cannot find source file "' + filename + '" in skeleton repo ' + skeleton)
     if not os.path.isdir(dir):
         fail('no such directory "' + dir + '"')
-    if not os.path.isfile(moss):
-        fail('no such script file "' + moss + '"')
-    if not os.access(moss, os.R_OK | os.X_OK):
-        fail('script file "' + moss + '" is not executable')
+    if not os.path.isfile(moss_script_path):
+        fail('no such script file "' + moss_script_path + '"')
+    if not os.access(moss_script_path, os.R_OK | os.X_OK):
+        fail('script file "' + moss_script_path + '" is not executable')
 
     paths = []
     logging.info('gathering files:')
@@ -53,9 +52,9 @@ def main():
             logging.info('    skipping non-directory: ' + subdir)
             continue
 
-        source_path = os.path.join(subdir_path, file)
+        source_path = os.path.join(subdir_path, filename)
         if not os.path.isfile(source_path):
-            logging.info('    skipping directory that does not contain ' + file + ': ' + subdir)
+            logging.info('    skipping directory that does not contain ' + filename + ': ' + subdir)
             continue
 
         paths.append(source_path)
@@ -64,7 +63,11 @@ def main():
     for path in paths:
         logging.info('    ' + path)
 
-    subprocess.run([moss, '-l', language, '-d', '-b', skeleton_file_path] + paths)
+    subprocess.run(([moss_script_path,          # script to run
+                     '-l', language,            # specified programming language
+                     '-d',                      # each submission in its own directory
+                     '-b', skeleton_file_path]) # basefile (skeleton code)
+                    + paths)                    # list all source file paths
 
 if __name__ == '__main__':
     logger = logging.getLogger()
