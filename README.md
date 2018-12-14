@@ -10,7 +10,6 @@ it is a flaky thing that wrangles other flaky things.)
  - Python 3
  - git commandline tools
  - PyGithub <https://pypi.python.org/pypi/PyGithub/1.35>
- - TravisPy <https://pypi.python.org/pypi/TravisPy>
 
 ## Dependency Installation
 
@@ -21,7 +20,7 @@ environments, use
 
 The following command should prepare your Python environment:
 
-`[~]$ pip3 install PyGithub TravisPy keyring`
+`[~]$ pip3 install PyGithub keyring`
 
 ## Cloning Student Repositories
 
