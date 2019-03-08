@@ -19,24 +19,25 @@ S   starter code: the emails are adalovelace@csu.fullerton.edu and
 
 def main():
     logging.getLogger().setLevel(logging.INFO)
-    
+
     parser = argparse.ArgumentParser(description=DESCRIPTION,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    
+
     parser.add_argument('--dir', required=False, type=str, default='.', help='parent directory of repositories; defaults to .')
     args = parser.parse_args()
 
-    parent_dir = args.dir        
+    parent_dir = args.dir
     if not os.path.isdir(parent_dir):
         logging.error('specified parent directory does not exist: "' +
                       parent_dir + '"')
         sys.exit(1)
-    
-    for subdir in sorted(os.listdir(parent_dir)):
+
+    # case-insensitive sort to match Titanium UI
+    for subdir in sorted(os.listdir(parent_dir), key=str.lower):
 
         if subdir[0] == '.':
             continue
-        
+
         repo_name = subdir
         repo_path = os.path.join(parent_dir, subdir)
         dot_git_path = os.path.join(repo_path, '.git')
@@ -54,7 +55,7 @@ def main():
                        emails.append(token)
 
             emails.sort()
-                       
+
             if len(emails) == 0:
                 verdict = 'Z'
             if emails == ['adalovelace@csu.fullerton.edu',
