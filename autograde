@@ -1,0 +1,158 @@
+#! /usr/bin/env python3
+# -*-Python-*-
+
+# Quick and dirty autograding script.
+#
+# This is hardcoded to grade one particular lab ("lab 2"), but we are writing
+# the code in an extensible way so that eventually we can have a module for
+# writing an assignment-specific autograder with only a few lines of code.
+#
+# This expects to be run from within a directory containing repos as subdirectories,
+# i.e. what the GitHub Classroom Assistant creates when you download an assignment.
+#
+
+import os, pathlib, subprocess
+
+COMPILE_MESSAGE_LINE_LIMIT = 10
+
+def main():
+    # assume that we are in a directory containing repos
+    current_dir = pathlib.PosixPath()
+    in_each_repo(assess_lab2, current_dir)
+
+def assess_lab2():
+    # print the line that should hold student names
+    print_line_number('./succeeds/succeeds.cpp', 2)
+    print_line_number('./fails/fails.cpp', 2)
+    print_line_number('./greeting/greeting.cpp', 2)
+
+    # TODO comments removed?
+    print("Searching for TODO comments:")
+    match1 = print_matching_lines('./succeeds/succeeds.cpp', 'TODO')
+    match2 = print_matching_lines('./fails/fails.cpp', 'TODO')
+    match3 = print_matching_lines('./greeting/greeting.cpp', 'TODO')
+    if not (match1 or match2 or match3):
+        print('(none found)')
+
+    print('')
+    succeeds_compiles = compiles_cleanly_in_subdir('succeeds', 'succeeds.cpp')
+    fails_compiles = compiles_cleanly_in_subdir('fails', 'fails.cpp')
+    greeting_compiles = compiles_cleanly_in_subdir('greeting', 'greeting.cpp')
+
+    print_output_and_exit_code_in_subdir('succeeds', 'succeeds.cpp')
+    print_output_and_exit_code_in_subdir('fails', 'fails.cpp')
+    print_output_and_exit_code_in_subdir('greeting', 'greeting.cpp')
+
+    git_log()
+
+def in_each_repo(function, root_path):
+    for child in root_path.iterdir():
+        if child.is_dir():
+            in_subdir(lambda path: assess_one_repo(function), child)
+    print_banner()
+
+def in_subdir(function, child_name):
+    current_dir = current_path()
+    subdir = current_dir / child_name
+    os.chdir(subdir)
+    result = function(subdir)
+    os.chdir(current_dir)
+    return result
+
+def assess_one_repo(function):
+    print_banner()
+    parent = current_path()
+    repo_dir_name = parent.parts[-1]
+    print(str(repo_dir_name))
+    return function()
+
+def current_path():
+    return pathlib.PosixPath(os.getcwd())
+
+def print_banner():
+    print('=' * 79)
+
+def print_repo_name(path):
+    print(path.parts[-1])
+
+# return True on success, False on failure
+def print_line_number(path, line_number_from_1):
+    ok = True
+    print(' line ' + str(line_number_from_1) + ' of ' + str(path) + ':')
+    try:
+        with open(path) as f:
+            lines = f.readlines()
+            index = line_number_from_1 - 1
+            if (index < 0) or (index >= len(lines)):
+                print('(that line does not exist)')
+                ok = False
+            else:
+                print(lines[index])
+    except OSError:
+        print('(file does not exist)')
+        ok = False
+    return ok
+
+# return True if there was at least one match, False otherwise
+def print_matching_lines(path, substring):
+    found_match = False
+    try:
+        with open(path) as f:
+            lines = f.readlines()
+            for i in range(len(lines)):
+                line = lines[i]
+                if substring in line:
+                    print('line ' + str(i+1) + ' of ' + str(path) + ': ' + line)
+                    found_match = True
+    except OSError:
+        print('(' + str(path) + ' does not exist)')
+    return found_match
+
+def compiles_cleanly_in_subdir(subdir, source_filename):
+    in_subdir(lambda path: compiles_cleanly(source_filename), subdir)
+
+def compiles_cleanly(source_filename):
+    result = True
+    print(str(source_filename) + ' compiles cleanly:', end='')
+    messages = command(['g++', source_filename])
+    if not messages:
+        print('YES')
+    else:
+        print('NO, messages:')
+        for line in messages.splitlines()[:COMPILE_MESSAGE_LINE_LIMIT]:
+            print(line)
+        result = False
+    print('')
+    return result
+
+# return a tuple (output, exit_code)
+def output_and_exit_code(args):
+    proc = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    return (proc.stdout, proc.returncode)
+
+# If the command succeeds (exit code 0), return None.
+# Otherwise return a string with stdout and stderr, probably containing error messages.
+def command(args):
+    messages, exit_code = output_and_exit_code(args)
+    if exit_code == 0:
+        return None
+    else:
+        return messages
+
+def print_output_and_exit_code_in_subdir(subdir, source_filename):
+    print('running ' + source_filename + '...')
+
+    def subdir_stuff(path):
+        print('  ', end='')
+        if compiles_cleanly(source_filename):
+            output, exit_code = output_and_exit_code(['./a.out'])
+            print('  EXIT CODE = ' + str(exit_code), 'OUTPUT ON NEXT LINE:')
+            print(output + '(end of output)\n')
+
+    in_subdir(subdir_stuff, subdir)
+
+def git_log():
+    output, exit_code = output_and_exit_code(['git', 'log'])
+    print('git log:\n' + output)
+
+main()
