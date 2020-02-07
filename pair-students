@@ -1,0 +1,73 @@
+#! /usr/bin/env python3
+# -*-Python-*-
+
+# This is a QUICK and DIRTY script to form pair-programming pairs from a
+# CSV roster.
+#
+# This is QUICK and DIRTY and more of a placeholder for something better.
+#
+# TODO:
+# - input from commandline arguments instead of hardcoded constants
+# - blacklist individuals, to skip e.g. instructor or students who droped
+# - blacklist old pairings, so students don't have repetitions
+# - whitelist pairings if there are 2 people you definitely want paired
+# - handle known-late students: put 1 of them in a group of 3, or 2 of them together
+# - "reroll" mechanism to try again
+
+import csv, random
+
+ROSTER_CSV_PATH = '120-11.csv'
+OUTPUT_CSV_PATH = '120-11-pairing-1.csv'
+SEED = 101
+
+def main():
+    # parse participants from Titan Online roster converted to CSV
+    participants = []
+    with open(ROSTER_CSV_PATH) as f:
+        reader = csv.reader(f)
+        rows = list(reader)
+        non_header_rows = rows[1:]
+        for row in non_header_rows:
+            assert(len(row) == 9)
+            name = row[3]
+            if len(name) > 0:
+                participants.append(name)
+    assert(len(participants) >= 2)
+    print("read " + str(len(participants)) + ' student names')
+
+    # form pairs
+    pairs = []
+    unpaired = list(participants)
+
+    seed = SEED
+    print('seed = ' + str(seed))
+    random.seed(seed)
+    random.shuffle(unpaired)
+
+    print('group sizes:', end='')
+    while len(unpaired) > 0:
+        group = []
+
+        group_size = 2
+        if (len(unpaired) % 2) == 1:
+            group_size = 3
+
+        print(' ' + str(group_size), end='')
+
+        assert(len(unpaired) >= group_size)
+        for _ in range(group_size):
+            group.append(unpaired.pop())
+
+        pairs.append(group)
+    print('\nformed ' + str(len(pairs)) + ' groups')
+
+    # write output CSV
+    with open(OUTPUT_CSV_PATH, 'w', newline='') as f:
+        writer = csv.writer(f)
+        id = 1
+        for group in pairs:
+            row = [id] + group
+            writer.writerow(row)
+            id += 1
+
+main()
