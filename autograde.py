@@ -7,7 +7,8 @@ def in_each_repo(function, root_path = CURRENT_DIRECTORY):
     if root_path == CURRENT_DIRECTORY:
         root_path = pathlib.PosixPath()
     for child in root_path.iterdir():
-        if child.is_dir():
+        # skip __pycache__
+        if child.is_dir() and child != '__pycache__':
             in_subdir(lambda path: assess_one_repo(function), child)
     print_banner()
 
