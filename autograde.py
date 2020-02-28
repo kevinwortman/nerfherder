@@ -68,6 +68,13 @@ def print_matching_lines(path, substring):
         print('(' + str(path) + ' does not exist)')
     return found_match
 
+def print_file(path):
+    try:
+        with open(path) as f:
+            print(f.read())
+    except OSError:
+        print('(' + str(path) + ' does not exist)')
+
 def compiles_cleanly_in_subdir(subdir, source_filename):
     in_subdir(lambda path: compiles_cleanly(source_filename), subdir)
 
