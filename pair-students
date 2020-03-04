@@ -8,17 +8,17 @@
 #
 # TODO:
 # - input from commandline arguments instead of hardcoded constants
-# - blacklist individuals, to skip e.g. instructor or students who droped
-# - blacklist old pairings, so students don't have repetitions
 # - whitelist pairings if there are 2 people you definitely want paired
 # - handle known-late students: put 1 of them in a group of 3, or 2 of them together
 # - "reroll" mechanism to try again
 
 import csv, random
 
-ROSTER_CSV_PATH = '120-11.csv'
-OUTPUT_CSV_PATH = '120-11-pairing-1.csv'
-SEED = 101
+ROSTER_CSV_PATH = '120-09.csv'
+OLD_PAIRING_CSV_PATHS = ['120-09-pairing-1.csv', '120-09-pairing-2.csv']
+NEW_PAIRING_CSV_PATH = '120-09-pairing-3.csv'
+STUDENT_BLACKLIST_CSV_PATH = 'student-blacklist.csv'
+SEED = 102
 
 def main():
     # parse participants from Titan Online roster converted to CSV
@@ -35,6 +35,34 @@ def main():
     assert(len(participants) >= 2)
     print("read " + str(len(participants)) + ' student names')
 
+    # parse old pairings
+    old_pairings = []
+    for path in OLD_PAIRING_CSV_PATHS:
+        with open(path) as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if (len(row) >= 3 and
+                    len(row) <= 4 and
+                    len(row[0]) > 0 and
+                    len(row[1]) > 0 and
+                    len(row[2]) > 0):
+                    names = [name for name in row[1:] if len(name) > 0]
+                    old_pairings.append(names)
+    # look for unrecognized names
+    for group in old_pairings:
+        for name in group:
+            if name not in participants:
+                print('warning: old pairing contains name not in roster: "' + name + '"')
+
+    # remove blacklisted students
+    with open(STUDENT_BLACKLIST_CSV_PATH) as f:
+        reader = csv.reader(f)
+        for row in reader:
+            assert(len(row) > 0)
+            name = row[0]
+            if name in participants:
+                participants.remove(name)
+
     # form pairs
     pairs = []
     unpaired = list(participants)
@@ -42,11 +70,10 @@ def main():
     seed = SEED
     print('seed = ' + str(seed))
     random.seed(seed)
-    random.shuffle(unpaired)
 
     print('group sizes:', end='')
     while len(unpaired) > 0:
-        group = []
+        assert(len(unpaired) >= 2)
 
         group_size = 2
         if (len(unpaired) % 2) == 1:
@@ -54,15 +81,29 @@ def main():
 
         print(' ' + str(group_size), end='')
 
-        assert(len(unpaired) >= group_size)
-        for _ in range(group_size):
-            group.append(unpaired.pop())
+        group = []
+        eligible = list(unpaired) # compatible with already-chosen group
+        while len(group) < group_size:
+            new_partner = random.choice(eligible)
+
+            group.append(new_partner)
+            unpaired.remove(new_partner)
+
+            found_last_group = False
+            for old_group in old_pairings:
+                if new_partner in old_group:
+                    for name in old_group:
+                        if name in eligible:
+                            eligible.remove(name)
+                    found_last_group = True
+            assert(found_last_group)
 
         pairs.append(group)
+
     print('\nformed ' + str(len(pairs)) + ' groups')
 
     # write output CSV
-    with open(OUTPUT_CSV_PATH, 'w', newline='') as f:
+    with open(NEW_PAIRING_CSV_PATH, 'w', newline='') as f:
         writer = csv.writer(f)
         id = 1
         for group in pairs:
