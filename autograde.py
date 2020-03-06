@@ -1,5 +1,5 @@
 
-import os, pathlib, subprocess
+import os, pathlib, subprocess, time
 
 CURRENT_DIRECTORY = 0
 
@@ -94,8 +94,12 @@ def compiles_cleanly(source_filename):
     return result
 
 # return a tuple (output, exit_code)
-def output_and_exit_code(args):
-    proc = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+def output_and_exit_code(args, stdin_string=None):
+    proc = subprocess.run(args,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT,
+                          text=True,
+                          input=stdin_string)
     return (proc.stdout, proc.returncode)
 
 # If the command succeeds (exit code 0), return None.
@@ -119,7 +123,7 @@ def print_output_and_exit_code_in_subdir(subdir, source_filename):
 
     in_subdir(subdir_stuff, subdir)
 
-def commandline_test_case_in_subdir(subdir, source_filename, arguments):
+def commandline_test_case_in_subdir(subdir, source_filename, arguments, stdin_string=None):
     print('running ' + source_filename + '...')
 
     def subdir_stuff(path):
@@ -127,7 +131,7 @@ def commandline_test_case_in_subdir(subdir, source_filename, arguments):
         if compiles_cleanly(source_filename):
             command = ['./a.out'] + arguments
             print('$ ./a.out ' + ' '.join(arguments))
-            output, exit_code = output_and_exit_code(command)
+            output, exit_code = output_and_exit_code(command, stdin_string)
             print('-OUTPUT BEGINS-')
             print(output)
             print('-OUTPUT ENDS-')
@@ -137,3 +141,11 @@ def commandline_test_case_in_subdir(subdir, source_filename, arguments):
 def git_log():
     output, exit_code = output_and_exit_code(['git', 'log'])
     print('git log:\n' + output)
+
+# default seconds is slightly larger than 1 so that C++ srand(time(0)) will
+# have a different seed.
+def repeat_with_delay(function, count, seconds=1.01):
+    for i in range(count):
+        if i > 0:
+            time.sleep(seconds)
+        function()
