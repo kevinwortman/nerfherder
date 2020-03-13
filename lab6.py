@@ -31,6 +31,9 @@ def grade_lab6():
     commandline_test_case_in_subdir('1-sphere', 'sphere.cpp', ['4'])
     commandline_test_case_in_subdir('1-sphere', 'sphere.cpp', ['5'])
 
+    print('---- sphere.cpp contents (look for pow) ----')
+    print_file('./1-sphere/sphere.cpp')
+
     print('---- 2-duration test cases ---')
     commandline_test_case_in_subdir('2-duration', 'duration.cpp', ['1000'])
     commandline_test_case_in_subdir('2-duration', 'duration.cpp', ['7565'])
@@ -47,5 +50,8 @@ def grade_lab6():
         commandline_test_case_in_subdir('4-stocks', 'stocks.cpp', [], stdin_string=str(deposit) + '\n')
     repeat_with_delay(lambda: stocks_trial(1000), 3)
     stocks_trial(0)
+
+    print('---- stocks.cpp contents (look for srand) ----')
+    print_file('./4-stocks/stocks.cpp')
 
 in_each_repo(grade_lab6)
