@@ -14,11 +14,11 @@
 
 import csv, random
 
-ROSTER_CSV_PATH = '120-09.csv'
-OLD_PAIRING_CSV_PATHS = ['120-09-pairing-1.csv', '120-09-pairing-2.csv']
-NEW_PAIRING_CSV_PATH = '120-09-pairing-3.csv'
+ROSTER_CSV_PATH = '120-11.csv'
+OLD_PAIRING_CSV_PATHS = ['120-11-pairing-1.csv', '120-11-pairing-2.csv']
+NEW_PAIRING_CSV_PATH = '120-11-pairing-3.csv'
 STUDENT_BLACKLIST_CSV_PATH = 'student-blacklist.csv'
-SEED = 102
+SEED = 112
 
 def main():
     # parse participants from Titan Online roster converted to CSV
