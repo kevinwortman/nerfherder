@@ -2,6 +2,7 @@
 import os, pathlib, subprocess, time
 
 CURRENT_DIRECTORY = 0
+COMPILE_MESSAGE_LINE_LIMIT = 10
 
 def in_each_repo(function, root_path = CURRENT_DIRECTORY):
     if root_path == CURRENT_DIRECTORY:

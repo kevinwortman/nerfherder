@@ -1,7 +1,7 @@
 #
 # To run this:
 # cd into the directory full of repos
-# $ python3 PATH/TO/lab4.py
+# $ python3 PATH/TO/lab5.py
 
 from autograde import *
 
