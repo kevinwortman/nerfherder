@@ -95,13 +95,18 @@ def compiles_cleanly(source_filename):
     return result
 
 # return a tuple (output, exit_code)
-def output_and_exit_code(args, stdin_string=None):
-    proc = subprocess.run(args,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT,
-                          text=True,
-                          input=stdin_string)
-    return (proc.stdout, proc.returncode)
+def output_and_exit_code(args, stdin_string=None, timeout=None):
+    try:
+        proc = subprocess.run(args,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              text=True,
+                              input=stdin_string,
+                              timeout=timeout)
+        return (proc.stdout, proc.returncode)
+    except subprocess.TimeoutExpired:
+        print("TIMEOUT AFTER " + str(timeout) + " seconds")
+        return ('', 255)
 
 # If the command succeeds (exit code 0), return None.
 # Otherwise return a string with stdout and stderr, probably containing error messages.
@@ -124,7 +129,7 @@ def print_output_and_exit_code_in_subdir(subdir, source_filename):
 
     in_subdir(subdir_stuff, subdir)
 
-def commandline_test_case_in_subdir(subdir, source_filename, arguments, stdin_string=None):
+def commandline_test_case_in_subdir(subdir, source_filename, arguments, stdin_string=None, timeout=None):
     print('running ' + source_filename + '...')
 
     def subdir_stuff(path):
@@ -132,7 +137,7 @@ def commandline_test_case_in_subdir(subdir, source_filename, arguments, stdin_st
         if compiles_cleanly(source_filename):
             command = ['./a.out'] + arguments
             print('$ ./a.out ' + ' '.join(arguments))
-            output, exit_code = output_and_exit_code(command, stdin_string)
+            output, exit_code = output_and_exit_code(command, stdin_string, timeout)
             print('-OUTPUT BEGINS-')
             print(output)
             print('-OUTPUT ENDS-')

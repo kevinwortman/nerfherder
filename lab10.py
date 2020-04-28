@@ -47,8 +47,8 @@ def grade_lab10():
     print_file('./2-pin/pin.cpp')
 
     print('---- 3-inf test cases ---')
-    commandline_test_case_in_subdir('3-inf', 'inf.cpp', ['a'])
-    commandline_test_case_in_subdir('3-inf', 'inf.cpp', ['a', 'b', 'c'])
+    commandline_test_case_in_subdir('3-inf', 'inf.cpp', ['a'], timeout=5)
+    commandline_test_case_in_subdir('3-inf', 'inf.cpp', ['a', 'b', 'c'], timeout=5)
 
     print('---- 4-stats test cases ---')
     commandline_test_case_in_subdir('4-stats', 'stats.cpp', [])
