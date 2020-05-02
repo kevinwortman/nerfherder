@@ -16,10 +16,14 @@ def in_each_repo(function, root_path = CURRENT_DIRECTORY):
 def in_subdir(function, child_name):
     current_dir = current_path()
     subdir = current_dir / child_name
-    os.chdir(subdir)
-    result = function(subdir)
-    os.chdir(current_dir)
-    return result
+    try:
+        os.chdir(subdir)
+        result = function(subdir)
+        os.chdir(current_dir)
+        return result
+    except FileNotFoundError:
+        print('ERROR no such directory "' + child_name + '"')
+        return None
 
 def assess_one_repo(function):
     print_banner()
