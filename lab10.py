@@ -27,21 +27,21 @@ def grade_lab10():
     compiles_cleanly_in_subdir('4-stats', 'stats.cpp')
 
     print('---- 1-drill test cases ---')
-    commandline_test_case_in_subdir('1-drill', 'drill.cpp', ['9'])
-    commandline_test_case_in_subdir('1-drill', 'drill.cpp', ['1'])
-    commandline_test_case_in_subdir('1-drill', 'drill.cpp', ['100'])
-    commandline_test_case_in_subdir('1-drill', 'drill.cpp', ['5', 'a', 'b', 'c'])
+    commandline_test_case_in_subdir('1-drill', 'drill.cpp', ['9'], timeout=2)
+    commandline_test_case_in_subdir('1-drill', 'drill.cpp', ['1'], timeout=2)
+    commandline_test_case_in_subdir('1-drill', 'drill.cpp', ['100'], timeout=2)
+    commandline_test_case_in_subdir('1-drill', 'drill.cpp', ['5', 'a', 'b', 'c'], timeout=2)
 
     print('---- drill.cpp contents, look for loop syntax ----')
     print_file('./1-drill/drill.cpp')
 
     print('---- 2-pin test cases ---')
     commandline_test_case_in_subdir('2-pin', 'pin.cpp', [],
-                                    stdin_string='1234\n')
+                                    stdin_string='1234\n', timeout=2)
     commandline_test_case_in_subdir('2-pin', 'pin.cpp', [],
-                                    stdin_string='-1\n')
+                                    stdin_string='-1\n', timeout=2)
     commandline_test_case_in_subdir('2-pin', 'pin.cpp', [],
-                                    stdin_string='-10\n10000\n1000\n')
+                                    stdin_string='-10\n10000\n1000\n', timeout=2)
 
     print('---- pin.cpp contents, look for do-while loop ----')
     print_file('./2-pin/pin.cpp')
